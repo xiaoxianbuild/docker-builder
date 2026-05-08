@@ -1,0 +1,3 @@
+[submodule "neuron/emqx-neuron"]
+	path = neuron/emqx-neuron
+	url = https://github.com/emqx/neuron.git
