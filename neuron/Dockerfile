@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     libtool \
     ca-certificates \
     apt-utils \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the dependencies script first to cache the layer
@@ -28,6 +29,9 @@ COPY emqx-neuron/install_dependencies.sh /app/
 
 # The script uses sudo, which is fine since we installed it.
 # We also need to fix potential issues with cloning if git is not configured, but it should be fine.
-RUN chmod +x install_dependencies.sh && ./install_dependencies.sh
+RUN apt-get update && chmod +x install_dependencies.sh && bash -euo pipefail ./install_dependencies.sh && rm -rf /var/lib/apt/lists/*
+
+COPY install-apache-arror.sh /app/
+RUN chmod +x install-apache-arror.sh && bash -euo pipefail ./install-apache-arror.sh
 
 ENTRYPOINT ["bash"]
