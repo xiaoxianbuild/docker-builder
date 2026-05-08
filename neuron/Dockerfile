@@ -30,4 +30,7 @@ COPY emqx-neuron/install_dependencies.sh /app/
 # We also need to fix potential issues with cloning if git is not configured, but it should be fine.
 RUN chmod +x install_dependencies.sh && ./install_dependencies.sh
 
+COPY install-apache-arror.sh /app/
+RUN chmod +x install-apache-arror.sh && ./install-apache-arror.sh
+
 ENTRYPOINT ["bash"]
