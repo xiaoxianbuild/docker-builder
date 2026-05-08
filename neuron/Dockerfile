@@ -34,4 +34,7 @@ RUN apt-get update && chmod +x install_dependencies.sh && bash -euo pipefail ./i
 COPY install-apache-arror.sh /app/
 RUN chmod +x install-apache-arror.sh && bash -euo pipefail ./install-apache-arror.sh
 
+COPY install-data-layers-dependencies.sh /app/
+RUN chmod +x install-data-layers-dependencies.sh && bash -euo pipefail ./install-data-layers-dependencies.sh
+
 ENTRYPOINT ["bash"]
