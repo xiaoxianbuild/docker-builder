@@ -10,8 +10,10 @@ env:
   IMAGE_NAME: neuron
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  # ── AMD64 构建（在 x86_64 原生机器上运行）──────────────────────────────────
+  build-amd64:
+    name: Build AMD64
+    runs-on: ubuntu-24.04          # GitHub 托管的 x86_64 标准机器
     permissions:
       contents: read
       packages: write
@@ -22,7 +24,7 @@ jobs:
         with:
           submodules: recursive  # 初始化并更新所有子模块
 
-      # 1. 登录到 GHCR
+      # 登录到 GHCR
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@v4
         with:
@@ -30,30 +32,82 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. 提取元数据（自动生成标签，如 latest 或 v1.0）
-      - name: Extract Docker metadata
+      # 提取版本标签（如 v1.2.3 → 1.2.3-amd64，以及 latest-amd64）
+      - name: Extract Docker metadata (AMD64)
         id: meta
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,suffix=-amd64
+            type=ref,event=tag,suffix=-amd64
+            type=semver,pattern={{version}},suffix=-amd64
+            type=semver,pattern={{major}}.{{minor}},suffix=-amd64
+            type=raw,value=latest-amd64,enable={{is_default_branch}}
 
-      # 3. 设置 QEMU (用于跨平台构建，例如在 x86 机器上构建 arm64 镜像)
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-
-      # 4. 设置 Docker Buildx
+      # 设置 Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # 5. 构建并推送
-      - name: Build and push Docker image
+      # 构建并推送
+      - name: Build and push (AMD64)
         uses: docker/build-push-action@v7
         with:
           context: ${{ env.IMAGE_NAME }}
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # 缓存优化：加速后续构建
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=amd64
+          cache-to: type=gha,mode=max,scope=amd64
+
+  # ── ARM64 构建（在 arm64 原生机器上运行）───────────────────────────────────
+  build-arm64:
+    name: Build ARM64
+    runs-on: ubuntu-24.04-arm      # GitHub 托管的 ARM64 原生机器（ubuntu-24.04-arm）
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive  # 初始化并更新所有子模块
+
+      # 登录到 GHCR
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 提取版本标签（如 v1.2.3 → 1.2.3-arm64，以及 latest-arm64）
+      - name: Extract Docker metadata (ARM64)
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,suffix=-arm64
+            type=ref,event=tag,suffix=-arm64
+            type=semver,pattern={{version}},suffix=-arm64
+            type=semver,pattern={{major}}.{{minor}},suffix=-arm64
+            type=raw,value=latest-arm64,enable={{is_default_branch}}
+
+      # 设置 Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # 构建并推送
+      - name: Build and push (ARM64)
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ env.IMAGE_NAME }}
+          push: true
+          platforms: linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=arm64
+          cache-to: type=gha,mode=max,scope=arm64
