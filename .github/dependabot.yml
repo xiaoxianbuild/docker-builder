@@ -1,6 +1,10 @@
 version: 2
 updates:
+  # 监控 GitHub Actions 的更新
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
