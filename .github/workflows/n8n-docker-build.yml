@@ -36,7 +36,7 @@ jobs:
         run: |
           chmod +x n8n/get_version.sh
           LATEST_VERSION=$(./n8n/get_version.sh n8n)
-          CHINESE_VERSION=$(./n8n/get_version.sh chinese)
+          CHINESE_VERSION=$(./n8n/get_version.sh chinese "$LATEST_VERSION")
           echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
           echo "chinese_version=$CHINESE_VERSION" >> $GITHUB_OUTPUT
           echo "Latest n8n version found: $LATEST_VERSION"
