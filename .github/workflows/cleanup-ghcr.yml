@@ -1,0 +1,29 @@
+name: Cleanup GHCR Container Images
+
+on:
+  schedule:
+    # 每天凌晨 00:00 (UTC) 定时扫描并清理无标签/废弃容器镜像
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 支持在 Actions 界面手动触发清理
+
+jobs:
+  cleanup:
+    name: Cleanup Untagged GHCR Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        package-name: ['n8n', 'neuron']
+
+    steps:
+      - name: Delete untagged container image versions
+        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
+        continue-on-error: true
+        with:
+          package-name: ${{ matrix.package-name }}
+          package-type: 'container'
+          min-versions-to-keep: 1
+          delete-only-untagged-versions: 'true'
